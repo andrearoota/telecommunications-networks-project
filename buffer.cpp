@@ -11,6 +11,12 @@ buffer::buffer()
 	status = 0;
 	tot_delay = 0.0;
 	tot_packs = 0.0;
+	
+	// Inizializzazione nuovi parametri stop-and-wait
+	waiting_ack = 0;
+	current_packet = NULL;
+	retransmissions = 0;
+	tot_retransmissions = 0.0;
 }
 
 void buffer::insert(packet *pack)
@@ -31,7 +37,6 @@ void buffer::insert(packet *pack)
 
 packet *buffer::get()
 {
-
 	packet *pack;
 	if (head == NULL)
 		return NULL;

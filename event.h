@@ -39,7 +39,6 @@ inline event::event(double Time)
 
 class arrival : public event
 {
-
 	buffer *buf;
 
 public:
@@ -50,12 +49,31 @@ public:
 
 class service : public event
 {
-
 	buffer *buf;
 
 public:
 	virtual void body();
 	service(double Time, buffer *Buf) : event(Time) { buf = Buf; }
+};
+
+// Nuovo evento per l'arrivo dell'ACK
+class ack_arrival : public event
+{
+	buffer *buf;
+
+public:
+	virtual void body();
+	ack_arrival(double Time, buffer *Buf) : event(Time) { buf = Buf; }
+};
+
+// Nuovo evento per timeout (opzionale)
+class timeout : public event
+{
+	buffer *buf;
+
+public:
+	virtual void body();
+	timeout(double Time, buffer *Buf) : event(Time) { buf = Buf; }
 };
 
 inline arrival::arrival(double Time, buffer *Buf) : event(Time)

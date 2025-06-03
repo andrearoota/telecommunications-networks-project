@@ -24,6 +24,7 @@ public:
 	packet *full() { return head; }
 	double tot_delay;
 	double tot_packs;
+	packet *current_packet;
 };
 
 #endif

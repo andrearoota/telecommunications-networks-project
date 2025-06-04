@@ -1,5 +1,5 @@
 /*******************************************************
-			 G/G/1 QUEUE SIMULATOR
+			 G/G/1 QUEUE SIMULATOR WITH STOP AND WAIT
 *******************************************************/
 #ifndef _QUEUE_H
 #define _QUEUE_H
@@ -10,6 +10,7 @@
 #include "buffer.h"
 #include "packet.h"
 #include "stat.h"
+
 
 class queue : public simulator
 {
@@ -22,14 +23,22 @@ class queue : public simulator
 	// counters
 	double packets;
 	double tot_delay;
+
+
 	// statistics
 	Sstat *delay;
 
 public:
+	//Stop and Wait parameters
+	double p_errore;      
+	double delta_ack;     
+	bool waiting_for_ack; 
+
 	queue(int argc, char *argv[]);
 	virtual ~queue(void);
 	virtual void init(void);
 	virtual void run(void);
+	virtual double getDuration();
 
 private:
 	virtual void clear_counters(void);
@@ -38,5 +47,7 @@ private:
 	virtual void print_trace(int Run);
 	virtual void results(void);
 	virtual int isconfsatisf(double perc);
+	
+
 };
 #endif

@@ -7,6 +7,7 @@
 
 #include "global.h"
 #include "buffer.h"
+#include "queue.h"
 
 class event
 {
@@ -39,28 +40,43 @@ inline event::event(double Time)
 
 class arrival : public event
 {
-
+	queue* sys;
 	buffer *buf;
 
 public:
 	int source_id;
 	virtual void body();
-	arrival(double Time, buffer *Buf);
+	arrival(double Time, buffer *Buf,  queue* Sys);
 };
 
 class service : public event
 {
-
+	queue* sys;
 	buffer *buf;
 
 public:
 	virtual void body();
-	service(double Time, buffer *Buf) : event(Time) { buf = Buf; }
+	service(double Time, buffer *Buf,  queue* Sys) : event(Time) { 
+		buf = Buf;
+		sys = Sys; 
+	}
+};
+class ack : public event {
+    buffer* buf;
+    queue* sys; // queue system to which the ack belongs	
+public:
+    ack(double Time, buffer* Buf, queue* Sys) : event(Time) {
+        buf = Buf;
+        sys = Sys;
+    }
+
+    virtual void body();
 };
 
-inline arrival::arrival(double Time, buffer *Buf) : event(Time)
-{
-	buf = Buf;
+
+inline arrival::arrival(double Time, buffer* Buf, queue* Sys) : event(Time) {
+    buf = Buf;
+    sys = Sys;
 }
 
 #endif

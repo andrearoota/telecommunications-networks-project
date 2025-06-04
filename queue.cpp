@@ -18,6 +18,10 @@ double Trslen;
 double Runlen;
 int NRUNmin;
 int NRUNmax;
+double p_errore;  // probabilità di errore, error probability
+double delta_ack; // tasso di arrivo ACK, ACK arrival rate
+bool waiting_for_ack = false; //Indicatore di attesa per ACK, flag to indicate if we are waiting for an ACK
+
 
 queue::queue(int argc, char *argv[]) : simulator(argc, argv)
 {
@@ -48,6 +52,8 @@ void queue::input()
 	printf("SIMULATION PARAMETERS:\n\n");
 	Trslen = read_double("Simulation transient len (s)", 100, 0.01, 10000);
 	Trslen = Trslen;
+	p_errore = read_double("Errore di trasmissione (p)", 0.1, 0.0, 1.0);
+	delta_ack = read_double("ACK tasso Poisson (delta)", 10.0, 0.1, 100.0);
 	Runlen = read_double("Simulation RUN len (s)", 100, 0.01, 10000);
 	Runlen = Runlen;
 	NRUNmin = read_int("Simulation number of RUNs", 5, 2, 100);
@@ -57,7 +63,7 @@ void queue::init()
 {
 	input();
 	event *Ev;
-	Ev = new arrival(0.0, buf);
+	Ev = new arrival(0.0, buf, this);
 	cal->put(Ev);
 	buf->status = 0;
 }
@@ -114,13 +120,23 @@ void queue::results()
 	fprintf(fpout, "Number of runs               %5d\n", NRUNmin);
 	fprintf(fpout, "Traffic load                 %5.3f\n", load);
 	fprintf(fpout, "Average service duration     %5.3f\n", duration);
-	fprintf(fpout, "Results:\n");
+	fprintf(fpout, "\nResults:\n");
 	fprintf(fpout, "Average Delay                %2.6f   +/- %.2e  p:%3.2f\n",
 			delay->mean(),
 			delay->confidence(.95),
 			delay->confpercerr(.95));
-	fprintf(fpout, "D  %2.6f   %2.6f   %.2e %2.6f\n", load, delay->mean(), delay->confidence(.95), duration * (load) / (1 - load));
+	fprintf(fpout, "Min Delay                    %2.6f\n", delay->min());
+	fprintf(fpout, "Max Delay                    %2.6f\n", delay->max());
+	fprintf(fpout, "Standard Deviation           %2.6f\n", delay->stddev());
+	fprintf(fpout, "Variance                     %2.6f\n", delay->var());
+	fprintf(fpout, "Samples Collected            %d\n", delay->num_samples());
+	fprintf(fpout, "D  %2.6f   %2.6f   %.2e %2.6f\n",
+			load,
+			delay->mean(),
+			delay->confidence(.95),
+			duration * (load) / (1 - load));
 }
+
 
 void queue::print_trace(int n)
 {
@@ -153,4 +169,9 @@ void queue::update_stats()
 int queue::isconfsatisf(double perc)
 {
 	return delay->isconfsatisfied(10, .95);
+}
+
+double queue::getDuration()
+{
+    return duration;
 }

@@ -54,7 +54,7 @@ void queue::input()
     printf("\n Arrivals model:\n");
     printf("1 - Poisson:>\n");
     traffic_model = read_int("", 1, 1, 1);
-    load = read_double("Packet generation rate λ (packets/sec)", 0.4, 0.01, 10.0);
+    load = read_double("Packet generation rate λ (packets/sec)", 0.4, 0.01, 0.999);
     inter = 1.0 / load; // Inter-arrival time
 
     // Service model
@@ -66,7 +66,7 @@ void queue::input()
     // NEW: Stop-and-wait parameters
     printf("\nSTOP-AND-WAIT PARAMETERS:\n");
     error_probability = read_double("Transmission error probability p", 0.1, 0.0, 0.99);
-    ack_rate = read_double("Acknowledgment arrival rate δ (acks/sec)", 2.0, 0.01, 100.0);
+    ack_rate = read_double("Acknowledgment arrival rate δ (acks/sec)", 1.0, 0.01, 100.0);
 
     printf("\nSIMULATION PARAMETERS:\n\n");
     Trslen = read_double("Simulation transient len (s)", 100, 0.01, 10000);
@@ -78,7 +78,7 @@ void queue::input()
     printf("Packet inter-arrival time: %.4f sec\n", inter);
     printf("Traffic intensity ρ = λ/μ = %.4f\n", load * duration);
     printf("Expected retransmissions per packet: p/(1-p) = %.4f\n",
-           error_prob / (1.0 - error_prob));
+           error_probability / (1.0 - error_probability));
 }
 
 void queue::init()
@@ -169,9 +169,9 @@ void queue::results()
     fprintf(fpout, "D  %2.6f   %2.6f   %.2e %2.6f\n", load, delay->mean(), delay->confidence(.95), duration * (load) / (1 - load));
 
     // Theoretical comparison (for validation)
-    double theoretical_delay = duration / (1.0 - error_probability) + 1.0 / ack_rate;
+    double theoretical_delay = duration / (1.0 - error_prob) + 1.0 / ack_rate;
     fprintf(fpout, "\nTheoretical comparison:\n");
-    fprintf(fpout, "Expected transmission time   %8.6f\n", duration / (1.0 - error_probability));
+    fprintf(fpout, "Expected transmission time   %8.6f\n", duration / (1.0 - error_prob));
     fprintf(fpout, "Expected ACK delay           %8.6f\n", 1.0 / ack_rate);
     fprintf(fpout, "Total theoretical delay      %8.6f\n", theoretical_delay);
     fprintf(fpout, "Simulation vs Theory ratio   %8.6f\n", delay->mean() / theoretical_delay);

@@ -6,7 +6,10 @@
 #define _CALENDAR_H
 
 #include "simulator.h"
-#include "event.h"
+
+
+class event;
+
 
 class calendar
 {
@@ -26,6 +29,7 @@ inline calendar::calendar()
 	head = NULL;
 	last = NULL;
 }
+/*
 inline calendar::~calendar()
 {
 	event *temp = head;
@@ -36,6 +40,6 @@ inline calendar::~calendar()
 		delete head;
 		head = temp;
 	}
-}
+}*/
 
 #endif

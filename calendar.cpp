@@ -5,6 +5,7 @@
 
 #include "global.h"
 #include "calendar.h"
+#include "event.h"
 
 event *calendar::get()
 {
@@ -23,6 +24,17 @@ event *calendar::get()
 	head = head->next;
 	last->next = head;
 	return ev;
+}
+calendar::~calendar()
+{
+    event *temp = head;
+    last->next = NULL;
+    while (temp != NULL)
+    {
+        temp = temp->next;
+        delete head;
+        head = temp;
+    }
 }
 
 void calendar::put(event *New)

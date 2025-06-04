@@ -9,6 +9,8 @@
 #include "buffer.h"
 #include "queue.h"
 
+class queue;
+
 class event
 {
 public:

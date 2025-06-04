@@ -23,12 +23,12 @@ class queue : public simulator
 	double error_probability;		  // probability p of transmission error
 	double ack_rate;				  // acknowledgment arrival rate δ
 	bool waiting_for_ack;			  // true if transmitter is waiting for ACK
-	double current_packet_start_time; // time when current packet transmission started
+	// double current_packet_start_time; // time when current packet transmission started
 
 	// counters
 	double packets;
 	double tot_delay;
-	double tot_retransmissions; // NEW: count retransmissions due to errors
+	// double tot_retransmissions; // NEW: count retransmissions due to errors
 
 	// statistics
 	Sstat *delay;

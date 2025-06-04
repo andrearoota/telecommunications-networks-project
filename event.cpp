@@ -22,7 +22,7 @@ void arrival::body()
 
 	// Generate next packet arrival
 	double next_arrival_time;
-	GEN_EXP(SEED, inter, next_arrival_time);
+	GEN_EXP(SEED, inter, next_arrival_time); // !!! It should be Poisson
 	ev = new arrival(time + next_arrival_time, buf);
 	cal->put(ev);
 
@@ -37,7 +37,7 @@ void arrival::body()
 		buf->status = 1;
 		// Schedula la trasmissione
 		double transmission_time;
-		GEN_EXP(SEED, duration, transmission_time);
+		GEN_EXP(SEED, duration, transmission_time); // OK
 		ev = new service(time + transmission_time, buf);
 		cal->put(ev);
 	}
@@ -51,14 +51,14 @@ void service::body()
 		return; // Safety
 
 	double error_check;
-	PSEUDO(SEED, error_check);
+	PSEUDO(SEED, error_check); // OK
 
 	if (error_check < error_prob)
 	{
 		// Ritrasmetti lo stesso pacchetto
 		tot_retrans += 1.0;
 		double retrans_time;
-		GEN_EXP(SEED, duration, retrans_time);
+		GEN_EXP(SEED, duration, retrans_time); // OK
 		event *ev = new service(time + retrans_time, buf);
 		cal->put(ev);
 	}
@@ -68,7 +68,7 @@ void service::body()
 		waiting_for_ack = true;
 		buf->status = 0;
 		double ack_delay;
-		GEN_EXP(SEED, 1.0 / ack_rate, ack_delay);
+		GEN_EXP(SEED, 1.0 / ack_rate, ack_delay); // !!! It should be Poisson
 		event *ev = new ack_arrival(time + ack_delay, buf);
 		cal->put(ev);
 	}

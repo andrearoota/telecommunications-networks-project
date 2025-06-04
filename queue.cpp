@@ -15,11 +15,11 @@
 calendar *cal;
 double inter;
 double duration;
-double error_prob;           // NEW
-double ack_rate;             // NEW
-bool waiting_for_ack;        // NEW
-double current_packet_start; // NEW
-double tot_retrans;          // NEW
+double error_prob;    // NEW
+double ack_rate;      // NEW
+bool waiting_for_ack; // NEW
+// double current_packet_start; // NEW
+double tot_retrans; // NEW
 double Trslen;
 double Runlen;
 int NRUNmin;
@@ -50,28 +50,28 @@ void queue::input()
 
     printf("MODEL PARAMETERS:\n\n");
 
-    // Arrival process
-    printf("Arrivals model:\n");
-    printf("1 - Poisson arrivals\n");
+    // Arrivals model
+    printf("\n Arrivals model:\n");
+    printf("1 - Poisson:>\n");
     traffic_model = read_int("", 1, 1, 1);
     load = read_double("Packet generation rate λ (packets/sec)", 0.4, 0.01, 10.0);
     inter = 1.0 / load; // Inter-arrival time
 
-    // Service process
-    printf("\nTransmission model:\n");
-    printf("1 - Exponential transmission times\n");
+    // Service model
+    printf("\n Service model:\n");
+    printf("1 - Exponential:>\n");
     service_model = read_int("", 1, 1, 1);
-    duration = read_double("Average transmission duration 1/μ (sec)", 0.4, 0.01, 100);
+    duration = read_double("Average service duration 1/μ (s)", 0.4, 0.01, 100);
 
     // NEW: Stop-and-wait parameters
     printf("\nSTOP-AND-WAIT PARAMETERS:\n");
-    error_prob = read_double("Transmission error probability p", 0.1, 0.0, 0.99);
+    error_probability = read_double("Transmission error probability p", 0.1, 0.0, 0.99);
     ack_rate = read_double("Acknowledgment arrival rate δ (acks/sec)", 2.0, 0.01, 100.0);
 
-    printf("\nSIMULATION PARAMETERS:\n");
-    Trslen = read_double("Transient length (sec)", 100, 0.01, 10000);
-    Runlen = read_double("Run length (sec)", 100, 0.01, 10000);
-    NRUNmin = read_int("Number of runs", 5, 2, 100);
+    printf("\nSIMULATION PARAMETERS:\n\n");
+    Trslen = read_double("Simulation transient len (s)", 100, 0.01, 10000);
+    Runlen = read_double("Simulation RUN len (s)", 100, 0.01, 10000);
+    NRUNmin = read_int("Simulation number of RUNs", 5, 2, 100);
 
     // Display calculated parameters
     printf("\nCALCULATED PARAMETERS:\n");
@@ -150,19 +150,23 @@ void queue::results()
     fprintf(fpout, "*********************************************\n\n");
 
     fprintf(fpout, "Input parameters:\n");
-    fprintf(fpout, "Transient length (s)         %8.3f\n", Trslen);
-    fprintf(fpout, "Run length (s)               %8.3f\n", Runlen);
-    fprintf(fpout, "Number of runs               %8d\n", NRUNmin);
-    fprintf(fpout, "Packet arrival rate λ        %8.3f\n", 1.0 / inter);
-    fprintf(fpout, "Transmission rate μ          %8.3f\n", 1.0 / duration);
-    fprintf(fpout, "Error probability p          %8.3f\n", error_probability);
-    fprintf(fpout, "ACK arrival rate δ           %8.3f\n", ack_rate);
+    fprintf(fpout, "Transient length (s)         %5.3f\n", Trslen);
+    fprintf(fpout, "Run length (s)               %5.3f\n", Runlen);
+    fprintf(fpout, "Number of runs               %5d\n", NRUNmin);
+    fprintf(fpout, "Traffic load λ (packets/sec) %5.3f\n", load);
+    fprintf(fpout, "Average service duration 1/μ (sec) %5.3f\n", duration);
 
-    fprintf(fpout, "\nResults:\n");
-    fprintf(fpout, "Mean packet traversal time   %8.6f ± %.2e (95%% conf)\n",
-            delay->mean(), delay->confidence(0.95));
-    fprintf(fpout, "Confidence interval error    %8.2f%%\n",
-            delay->confpercerr(0.95));
+    // NEW: Stop-and-wait parameters
+    fprintf(fpout, "Stop-and-wait parameters:\n");
+    fprintf(fpout, "Transmission error probability p %8.3f\n", error_prob);
+    fprintf(fpout, "ACK arrival rate δ (acks/sec) %8.3f\n", ack_rate);
+
+    fprintf(fpout, "Results:\n");
+    fprintf(fpout, "Average Delay                %2.6f   +/- %.2e  p:%3.2f\n",
+            delay->mean(),
+            delay->confidence(.95),
+            delay->confpercerr(.95));
+    fprintf(fpout, "D  %2.6f   %2.6f   %.2e %2.6f\n", load, delay->mean(), delay->confidence(.95), duration * (load) / (1 - load));
 
     // Theoretical comparison (for validation)
     double theoretical_delay = duration / (1.0 - error_probability) + 1.0 / ack_rate;

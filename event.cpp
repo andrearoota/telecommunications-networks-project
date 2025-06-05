@@ -7,13 +7,12 @@
 #include "rand.h"
 
 extern calendar *cal;
-extern double inter;				// inter-arrival time between packet generations
-extern double duration;				// transmission duration (service time)
-extern double error_prob;			// NEW: error probability p
-extern double ack_rate;				// NEW: acknowledgment rate δ
-extern bool waiting_for_ack;		// NEW: stop-and-wait state
-extern double current_packet_start; // NEW: track packet start time
-extern double tot_retrans;			// NEW: retransmission counter
+extern double inter;		 // inter-arrival time between packet generations
+extern double duration;		 // transmission duration (service time)
+extern double error_prob;	 // NEW: error probability p
+extern double ack_rate;		 // NEW: acknowledgment rate δ
+extern bool waiting_for_ack; // NEW: stop-and-wait state
+extern double tot_retrans;	 // NEW: retransmission counter
 
 // Packet generation event - creates new packets and queues them
 void arrival::body()
@@ -22,7 +21,7 @@ void arrival::body()
 
 	// Generate next packet arrival
 	double next_arrival_time;
-	GEN_EXP(SEED, inter, next_arrival_time); // !!! It should be Poisson
+	GEN_EXP(SEED, inter, next_arrival_time);
 	ev = new arrival(time + next_arrival_time, buf);
 	cal->put(ev);
 
@@ -35,9 +34,9 @@ void arrival::body()
 	{
 		buf->current_packet = buf->get();
 		buf->status = 1;
-		// Schedula la trasmissione
+		// Schedule the transmission
 		double transmission_time;
-		GEN_EXP(SEED, duration, transmission_time); // OK
+		GEN_EXP(SEED, duration, transmission_time);
 		ev = new service(time + transmission_time, buf);
 		cal->put(ev);
 	}
@@ -51,11 +50,11 @@ void service::body()
 		return; // Safety
 
 	double error_check;
-	PSEUDO(SEED, error_check); // OK
+	PSEUDO(SEED, error_check);
 
 	if (error_check < error_prob)
 	{
-		// Ritrasmetti lo stesso pacchetto
+		// Retransmission due to error
 		tot_retrans += 1.0;
 		double retrans_time;
 		GEN_EXP(SEED, duration, retrans_time); // OK
@@ -64,11 +63,11 @@ void service::body()
 	}
 	else
 	{
-		// Attendi ACK
+		// Wait for ACK
 		waiting_for_ack = true;
 		buf->status = 0;
 		double ack_delay;
-		GEN_EXP(SEED, 1.0 / ack_rate, ack_delay); // !!! It should be Poisson
+		GEN_EXP(SEED, 1.0 / ack_rate, ack_delay);
 		event *ev = new ack_arrival(time + ack_delay, buf);
 		cal->put(ev);
 	}
@@ -86,7 +85,7 @@ void ack_arrival::body()
 		delete buf->current_packet;
 		buf->current_packet = NULL;
 
-		// Avvia prossimo pacchetto se presente
+		// If there is a next packet in the buffer, start its transmission
 		packet *next_pack = buf->get();
 		if (next_pack != NULL)
 		{

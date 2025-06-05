@@ -18,8 +18,7 @@ double duration;
 double error_prob;    // NEW
 double ack_rate;      // NEW
 bool waiting_for_ack; // NEW
-// double current_packet_start; // NEW
-double tot_retrans; // NEW
+double tot_retrans;   // NEW
 double Trslen;
 double Runlen;
 int NRUNmin;

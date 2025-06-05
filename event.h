@@ -69,16 +69,6 @@ public:
     ack_arrival(double Time, buffer *Buf) : event(Time) { buf = Buf; }
 };
 
-// NEW: Transmission error event (immediate check after service completion)
-class transmission_check : public event
-{
-    buffer *buf;
-
-public:
-    virtual void body();
-    transmission_check(double Time, buffer *Buf) : event(Time) { buf = Buf; }
-};
-
 inline arrival::arrival(double Time, buffer *Buf) : event(Time)
 {
     buf = Buf;

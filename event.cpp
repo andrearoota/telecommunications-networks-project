@@ -5,87 +5,96 @@
 #include "event.h"
 #include "buffer.h"
 #include "calendar.h"
-#include "queue.h"
 #include "rand.h"
 
 extern calendar *cal;
 extern double inter;
 extern double duration;
 
-void arrival::body() {
-    event* ev;
+//added variable for stop and wait implementation
+extern double error_prob;	
+extern double ack_rate;	
+extern bool waiting_for_ack; 
+extern double retry_count;	 
 
-    // genera prossimo arrivo
-    double esito;
-    GEN_EXP(SEED, inter, esito);
-    ev = new arrival(time + esito, buf, sys);
-    cal->put(ev);
 
-    // crea nuovo pacchetto
-    packet* pack = new packet(time);
+void arrival::body()
+{
+	event *ev;
 
-    if (buf->full() || buf->status) {
-        buf->insert(pack);
-    } else if (!sys->waiting_for_ack) {
-        // solo se non si sta aspettando un ACK
-        //buf->tot_packs += 1.0;
-        delete pack;
+	// generation of next arrival
+	double next_arrival_time;
+	GEN_EXP(SEED, inter, next_arrival_time);
+	ev = new arrival(time + next_arrival_time, buf);
+	cal->put(ev);
 
-        GEN_EXP(SEED, duration, esito);
-        ev = new service(time + esito, buf, sys); // passa queue*
+	// Allocate and queue new packet
+	packet *pack = new packet(time);
+	buf->insert(pack);
+
+	 // Start service if buffer is free and no ACK is in wait
+	if (buf->status == 0 && !waiting_for_ack)
+	{
+		buf->running_p = buf->get();
+		buf->status = 1;
+		double transmission_time;
+		GEN_EXP(SEED, duration, transmission_time);
+		ev = new service(time + transmission_time, buf);
+		cal->put(ev);
+	}
+}
+
+// Handles transmission results
+void service::body()
+{
+	packet *pack = buf->running_p;
+	if (!pack)
+		return; // Safety
+
+	double test_value;
+	PSEUDO(SEED, test_value);
+
+	if (test_value < error_prob)
+    {
+        // Schedule retransmission
+        retry_count += 1.0;
+        double retry_time;
+        GEN_EXP(SEED, duration, retry_time);
+        event *ev = new service(time + retry_time, buf);
         cal->put(ev);
-
-        sys->waiting_for_ack = true;
-        buf->status = 1;
-    } else {
-        // Stop-and-wait: se si sta aspettando ack, accoda
-        buf->insert(pack);
     }
-}
-
-
-void service::body() {
-    packet* pack = buf->get();
-
-    if (pack == nullptr) {
+    else
+    {
+        // Move to waiting for ACK phase
+        waiting_for_ack = true;
         buf->status = 0;
-        return;
-    }
-
-    double errore;
-	PSEUDO(SEED, errore);
-
-
-    if (errore < sys->p_errore) {
-        buf->insert(pack);
-
-        if (!sys->waiting_for_ack) {
-            double esito;
-            GEN_EXP(SEED, sys->getDuration(), esito);
-            cal->put(new service(time + esito, buf, sys));
-            sys->waiting_for_ack = true;
-        }
-    } else {
-        double ack_delay;
-        GEN_EXP(SEED, 1.0 / sys->delta_ack, ack_delay);
-        cal->put(new ack(time + ack_delay, buf, sys));
-
-        buf->tot_delay += time - pack->get_time();
-        buf->tot_packs += 1.0;
-
-        delete pack;
+        double ack_wait_time;
+        GEN_EXP(SEED, 1.0 / ack_rate, ack_wait_time);
+        event *ev = new ack_arrival(time + ack_wait_time, buf);
+        cal->put(ev);
     }
 }
 
-
-void ack::body() {
-    sys->waiting_for_ack = false;
-
-    // Se c'è qualcosa in coda, avvia un nuovo servizio
-    if (!buf->empty() && !sys->waiting_for_ack) {
-        double esito;
-        GEN_EXP(SEED, sys->getDuration(), esito);
-        cal->put(new service(time + esito, buf, sys)); 
-        sys->waiting_for_ack = true;
-    }
+//implementation of the new event for ACK arrival
+void ack_arrival::body()
+{
+	if (waiting_for_ack && buf->running_p)
+	{
+		waiting_for_ack = false;
+		double packet_delay = time - buf->running_p->get_time();
+		buf->tot_delay += packet_delay;
+		buf->tot_packs += 1.0;
+		delete buf->running_p;
+		buf->running_p = NULL;
+		packet *next_pack = buf->get();
+		if (next_pack != NULL)
+		{
+			buf->running_p = next_pack;
+			buf->status = 1;
+			double transmission_time;
+			GEN_EXP(SEED, duration, transmission_time);
+			event *ev = new service(time + transmission_time, buf);
+			cal->put(ev);
+		}
+	}
 }

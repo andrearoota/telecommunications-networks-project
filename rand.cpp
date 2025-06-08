@@ -17,44 +17,44 @@ int lseed[11] = {
 
 int arrotonda(double x)
 {
-	double up;
+double up;
 
-	up = ceil(x);
-	if ((up - x) < 0.5)
-		return (int)up;
-	else
-		return (int)(up - 1);
+up=ceil(x);
+if((up-x)<0.5)
+	return (int)up;
+else 
+	return (int)(up-1);
 }
 
 int transmit(double g)
 {
-	double prob;
-	PSEUDO(SEED, prob);
-	if (prob < g)
-		return 1;
-	else
-		return 0;
+double prob;
+PSEUDO(SEED,prob);
+if(prob<g)
+	return 1;
+else
+	return 0;
 }
 
 int fact(int i)
 {
-	if (i <= 1)
-		return 1;
-	else
-		return i * fact(i - 1);
+if(i<=1)
+	return 1;
+else
+	return i*fact(i-1);
 }
 
 int n_interf_by_poisson(double average)
 {
-	double y, out;
-	int x;
+double y,out;
+int x;
 
-	PSEUDO(SEED, y);
-	for (x = 1;; x++)
+PSEUDO(SEED,y);
+for(x=1;;x++)
 	{
-		out = exp(-average) * pow(average, x * 1.0) / fact(x);
-		if (y <= out)
-			break;
+	out=exp(-average)*pow(average,x*1.0)/fact(x);
+	if(y<=out)
+		break;
 	}
-	return x;
+return x;
 }

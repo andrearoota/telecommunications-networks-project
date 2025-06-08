@@ -7,24 +7,22 @@
 
 #include "packet.h"
 
-class buffer
-{
+class buffer	{
 
-	packet *head;
-	packet *last;
-
-public:
-	int status;
+	packet* head;
+	packet* last;
+	public:
+	int	status;
 
 public:
 	buffer();
-	~buffer() {}
-	void insert(packet *pack);
-	packet *get();
-	packet *full() { return head; }
+	~buffer(){}
+	void insert(packet* pack);
+	packet* get();
+	packet* full(){return head;}
 	double tot_delay;
 	double tot_packs;
-	bool empty() const { return head == nullptr; }
-};
+	packet *running_p; 
+	};
 
 #endif
